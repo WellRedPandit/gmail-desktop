@@ -8,7 +8,8 @@ import {
   Menu,
   Tray,
   MenuItemConstructorOptions,
-  dialog
+  dialog,
+  session
 } from 'electron'
 import { is } from 'electron-util'
 
@@ -83,6 +84,14 @@ function createWindow(): void {
     show: !shouldStartMinimized
   })
 
+  // https://stackoverflow.com/a/35672988
+  // https://www.whatismybrowser.com/guides/the-latest-user-agent/firefox
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    details.requestHeaders['User-Agent'] =
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:80.0) Gecko/20100101 Firefox/80.0'
+    callback({ cancel: false, requestHeaders: details.requestHeaders })
+  })
+
   if (lastWindowState.fullscreen && !mainWindow.isFullScreen()) {
     mainWindow.setFullScreen(lastWindowState.fullscreen)
   }
@@ -95,7 +104,7 @@ function createWindow(): void {
     setAppMenuBarVisibility()
   }
 
-  mainWindow.loadURL('https://mail.google.com')
+  mainWindow.loadURL('https://mail.google.com') // ,{userAgent: 'Chrome'})
 
   mainWindow.webContents.on('dom-ready', () => {
     addCustomCSS(mainWindow)
@@ -166,7 +175,7 @@ function createMailto(url: string): void {
   })
 
   replyToWindow.loadURL(
-    `https://mail.google.com/mail/?extsrc=mailto&url=${url}`
+    `https://mail.google.com/mail/?extsrc=mailto&url=${url}` // ,{userAgent: 'Chrome'}
   )
 }
 
@@ -307,7 +316,7 @@ app.on('before-quit', () => {
 
     // `Add account` opens `accounts.google.com`
     if (url.startsWith('https://accounts.google.com')) {
-      mainWindow.loadURL(url)
+      mainWindow.loadURL(url) // ,{userAgent: 'Chrome'})
       return
     }
 
@@ -318,7 +327,7 @@ app.on('before-quit', () => {
       const targetAccountId = getUrlAccountId(url)
 
       if (targetAccountId !== currentAccountId) {
-        mainWindow.loadURL(url)
+        mainWindow.loadURL(url) // ,{userAgent: 'Chrome'})
         return
       }
 
